@@ -1,0 +1,60 @@
+{
+  "name": "figma-desktop-cli",
+  "version": "0.1.0",
+  "description": "CLI tool to connect and interact with Figma Desktop MCP server for design-to-code workflows",
+  "main": "dist/index.js",
+  "bin": {
+    "figma-desktop-cli": "dist/index.js"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsx src/index.ts",
+    "dev": "tsx src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "find-deadcode": "ts-prune",
+    "format": "eslint --cache --fix --quiet . && prettier --write --cache .",
+    "pre-commit": "npm run format && npm run find-deadcode"
+  },
+  "keywords": [
+    "figma",
+    "mcp",
+    "design",
+    "design-to-code",
+    "cli",
+    "model-context-protocol"
+  ],
+  "author": "Hesed",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@trivago/prettier-plugin-sort-imports": "^6.0.0",
+    "@types/node": "^24.10.1",
+    "@vitest/coverage-v8": "^4.0.9",
+    "@vitest/ui": "^4.0.9",
+    "eslint": "^9.39.1",
+    "globals": "^16.5.0",
+    "jiti": "^2.6.1",
+    "prettier": "3.6.2",
+    "ts-prune": "^0.10.3",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0",
+    "typescript-eslint": "^8.46.4",
+    "vitest": "^4.0.9"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hesedcasa/figma-desktop-cli.git"
+  },
+  "types": "./dist/index.d.ts",
+  "bugs": {
+    "url": "https://github.com/hesedcasa/figma-desktop-cli/issues"
+  },
+  "homepage": "https://github.com/hesedcasa/figma-desktop-cli#readme"
+}
