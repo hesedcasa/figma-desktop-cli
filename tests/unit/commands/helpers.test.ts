@@ -1,16 +1,33 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getCurrentVersion, printAvailableCommands, printCommandDetail } from '../../../src/commands/helpers.js';
+import { COMMANDS, COMMANDS_DETAIL, COMMANDS_INFO } from '../../../src/config/constants.js';
 
 describe('commands/helpers', () => {
   let consoleLogSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    // Populate test data to simulate discovered tools
+    COMMANDS.length = 0;
+    COMMANDS_INFO.length = 0;
+    COMMANDS_DETAIL.length = 0;
+
+    COMMANDS.push('get_current_page', 'navigate_page');
+    COMMANDS_INFO.push('Gets information about the current page', 'Navigates to a specific page');
+    COMMANDS_DETAIL.push(
+      '\nParameters:\nNo parameters required\n\nExample:\nget_current_page {}\n',
+      '\nParameters:\n- pageId (required): string - The ID of the page to navigate to\n\nExample:\nnavigate_page {"pageId":"<pageId>"}\n'
+    );
   });
 
   afterEach(() => {
     vi.clearAllMocks();
+    // Clean up
+    COMMANDS.length = 0;
+    COMMANDS_INFO.length = 0;
+    COMMANDS_DETAIL.length = 0;
   });
 
   describe('getCurrentVersion', () => {
@@ -49,16 +66,16 @@ describe('commands/helpers', () => {
       expect(calls[2][0]).toMatch(/^2\./);
     });
 
-    it('should print resolve-library-id command', () => {
+    it('should print get_current_page command', () => {
       printAvailableCommands();
       const allCalls = consoleLogSpy.mock.calls.map(call => call[0]).join(' ');
-      expect(allCalls).toContain('resolve-library-id');
+      expect(allCalls).toContain('get_current_page');
     });
 
     it('should print command descriptions', () => {
       printAvailableCommands();
       const allCalls = consoleLogSpy.mock.calls.map(call => call[0]).join(' ');
-      expect(allCalls).toContain('Resolves a package/product name');
+      expect(allCalls).toContain('Gets information about the current page');
     });
   });
 
@@ -68,26 +85,26 @@ describe('commands/helpers', () => {
     });
 
     it('should print detail for valid command', () => {
-      printCommandDetail('resolve-library-id');
+      printCommandDetail('get_current_page');
       expect(consoleLogSpy).toHaveBeenCalled();
     });
 
     it('should print command name', () => {
-      printCommandDetail('resolve-library-id');
+      printCommandDetail('get_current_page');
       const allCalls = consoleLogSpy.mock.calls.map(call => call[0]).join(' ');
-      expect(allCalls).toContain('resolve-library-id');
+      expect(allCalls).toContain('get_current_page');
     });
 
     it('should print command description', () => {
-      printCommandDetail('resolve-library-id');
+      printCommandDetail('get_current_page');
       const allCalls = consoleLogSpy.mock.calls.map(call => call[0]).join(' ');
-      expect(allCalls).toContain('Resolves a package/product name');
+      expect(allCalls).toContain('Gets information about the current page');
     });
 
     it('should print command parameters', () => {
-      printCommandDetail('resolve-library-id');
+      printCommandDetail('navigate_page');
       const allCalls = consoleLogSpy.mock.calls.map(call => call[0]).join(' ');
-      expect(allCalls).toContain('libraryName');
+      expect(allCalls).toContain('pageId');
     });
 
     it('should handle unknown command', () => {
@@ -121,7 +138,7 @@ describe('commands/helpers', () => {
     });
 
     it('should handle all valid commands', () => {
-      const commands = ['resolve-library-id', 'get-library-docs'];
+      const commands = ['get_current_page', 'navigate_page'];
 
       commands.forEach(cmd => {
         consoleLogSpy.mockClear();
@@ -134,10 +151,10 @@ describe('commands/helpers', () => {
 
     it('should trim command name before processing', () => {
       consoleLogSpy.mockClear();
-      printCommandDetail('  resolve-library-id  ');
+      printCommandDetail('  get_current_page  ');
       const allCalls = consoleLogSpy.mock.calls.map(call => call[0]).join(' ');
-      expect(allCalls).toContain('resolve-library-id');
-      expect(allCalls).toContain('Resolves a package/product name');
+      expect(allCalls).toContain('get_current_page');
+      expect(allCalls).toContain('Gets information about the current page');
     });
   });
 });

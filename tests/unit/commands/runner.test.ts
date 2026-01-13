@@ -17,8 +17,8 @@ vi.mock('@modelcontextprotocol/sdk/client/index.js', () => ({
   }),
 }));
 
-vi.mock('@modelcontextprotocol/sdk/client/stdio.js', () => ({
-  StdioClientTransport: vi.fn(),
+vi.mock('@modelcontextprotocol/sdk/client/sse.js', () => ({
+  SSEClientTransport: vi.fn(),
 }));
 
 vi.mock('@modelcontextprotocol/sdk/types.js', () => ({
@@ -49,12 +49,12 @@ describe('commands/runner', () => {
 
   describe('runCommand', () => {
     it('should execute command without arguments', async () => {
-      await runCommand('resolve-library-id', null, null);
+      await runCommand('get_current_page', null, null);
 
       expect(mockConnect).toHaveBeenCalled();
       expect(mockCallTool).toHaveBeenCalledWith(
         {
-          name: 'resolve-library-id',
+          name: 'get_current_page',
           arguments: {},
         },
         {}
@@ -64,29 +64,29 @@ describe('commands/runner', () => {
     });
 
     it('should execute command with JSON arguments', async () => {
-      const jsonArg = '{"libraryName": "mongodb"}';
+      const jsonArg = '{"pageId": "123:456"}';
 
-      await runCommand('resolve-library-id', jsonArg, null);
+      await runCommand('navigate_page', jsonArg, null);
 
       expect(mockCallTool).toHaveBeenCalledWith(
         {
-          name: 'resolve-library-id',
-          arguments: { libraryName: 'mongodb' },
+          name: 'navigate_page',
+          arguments: { pageId: '123:456' },
         },
         {}
       );
       expect(processExitSpy).toHaveBeenCalledWith(0);
     });
 
-    it('should execute get-library-docs with JSON arguments', async () => {
-      const jsonArg = '{"context7CompatibleLibraryID": "/mongodb/docs", "topic": "aggregation"}';
+    it('should execute get_selection with JSON arguments', async () => {
+      const jsonArg = '{"includeChildren": true}';
 
-      await runCommand('get-library-docs', jsonArg, null);
+      await runCommand('get_selection', jsonArg, null);
 
       expect(mockCallTool).toHaveBeenCalledWith(
         {
-          name: 'get-library-docs',
-          arguments: { context7CompatibleLibraryID: '/mongodb/docs', topic: 'aggregation' },
+          name: 'get_selection',
+          arguments: { includeChildren: true },
         },
         {}
       );
@@ -94,29 +94,24 @@ describe('commands/runner', () => {
     });
 
     it('should use correct transport configuration', async () => {
-      const { StdioClientTransport } = await import('@modelcontextprotocol/sdk/client/stdio.js');
+      const { SSEClientTransport } = await import('@modelcontextprotocol/sdk/client/sse.js');
 
-      await runCommand('resolve-library-id', null, null);
+      await runCommand('get_current_page', null, null);
 
-      expect(StdioClientTransport).toHaveBeenCalledWith(
-        expect.objectContaining({
-          command: 'npx',
-          args: ['-y', '@upstash/context7-mcp'],
-        })
-      );
+      expect(SSEClientTransport).toHaveBeenCalledWith(expect.any(URL));
     });
 
     it('should log command and arguments', async () => {
-      await runCommand('resolve-library-id', '{"libraryName": "mongodb"}', null);
+      await runCommand('navigate_page', '{"pageId": "123:456"}', null);
 
-      expect(consoleLogSpy).toHaveBeenCalledWith('resolve-library-id {"libraryName": "mongodb"}');
+      expect(consoleLogSpy).toHaveBeenCalledWith('navigate_page {"pageId": "123:456"}');
     });
 
     it('should log result as JSON', async () => {
       const mockResult = { result: 'success', data: 'test' };
       mockCallTool.mockResolvedValue(mockResult);
 
-      await runCommand('resolve-library-id', null, null);
+      await runCommand('get_current_page', null, null);
 
       expect(consoleLogSpy).toHaveBeenCalledWith(JSON.stringify(mockResult, null, 2));
     });
@@ -124,7 +119,7 @@ describe('commands/runner', () => {
     it('should handle connection errors', async () => {
       mockConnect.mockRejectedValue(new Error('Connection failed'));
 
-      await runCommand('resolve-library-id', null, null);
+      await runCommand('get_current_page', null, null);
 
       expect(consoleErrorSpy).toHaveBeenCalledWith('Error running command:', 'Connection failed');
       expect(processExitSpy).toHaveBeenCalledWith(1);
@@ -133,25 +128,25 @@ describe('commands/runner', () => {
     it('should handle tool execution errors', async () => {
       mockCallTool.mockRejectedValue(new Error('Tool execution failed'));
 
-      await runCommand('resolve-library-id', '{"libraryName": "invalid"}', null);
+      await runCommand('navigate_page', '{"pageId": "invalid"}', null);
 
       expect(consoleErrorSpy).toHaveBeenCalledWith('Error running command:', 'Tool execution failed');
       expect(processExitSpy).toHaveBeenCalledWith(1);
     });
 
     it('should handle JSON parse errors', async () => {
-      await runCommand('resolve-library-id', 'invalid json', null);
+      await runCommand('get_current_page', 'invalid json', null);
 
       expect(consoleErrorSpy).toHaveBeenCalled();
       expect(processExitSpy).toHaveBeenCalledWith(1);
     });
 
     it('should handle empty string arguments', async () => {
-      await runCommand('resolve-library-id', '', null);
+      await runCommand('get_current_page', '', null);
 
       expect(mockCallTool).toHaveBeenCalledWith(
         {
-          name: 'resolve-library-id',
+          name: 'get_current_page',
           arguments: {},
         },
         {}
@@ -159,11 +154,11 @@ describe('commands/runner', () => {
     });
 
     it('should handle whitespace-only arguments', async () => {
-      await runCommand('resolve-library-id', '   ', null);
+      await runCommand('get_current_page', '   ', null);
 
       expect(mockCallTool).toHaveBeenCalledWith(
         {
-          name: 'resolve-library-id',
+          name: 'get_current_page',
           arguments: {},
         },
         {}
@@ -171,7 +166,7 @@ describe('commands/runner', () => {
     });
 
     it('should close client after successful execution', async () => {
-      await runCommand('resolve-library-id', null, null);
+      await runCommand('get_current_page', null, null);
 
       expect(mockClose).toHaveBeenCalled();
     });
@@ -179,7 +174,7 @@ describe('commands/runner', () => {
     it('should use correct client name and version', async () => {
       const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
 
-      await runCommand('resolve-library-id', null, null);
+      await runCommand('get_current_page', null, null);
 
       expect(Client).toHaveBeenCalledWith(
         {
@@ -193,17 +188,17 @@ describe('commands/runner', () => {
     });
 
     it('should handle complex JSON arguments', async () => {
-      const complexArg = '{"context7CompatibleLibraryID": "/vercel/next.js", "topic": "routing", "page": 2}';
+      const complexArg = '{"nodeId": "123:456", "includeChildren": true, "depth": 2}';
 
-      await runCommand('get-library-docs', complexArg, null);
+      await runCommand('get_node', complexArg, null);
 
       expect(mockCallTool).toHaveBeenCalledWith(
         {
-          name: 'get-library-docs',
+          name: 'get_node',
           arguments: {
-            context7CompatibleLibraryID: '/vercel/next.js',
-            topic: 'routing',
-            page: 2,
+            nodeId: '123:456',
+            includeChildren: true,
+            depth: 2,
           },
         },
         {}
@@ -213,20 +208,20 @@ describe('commands/runner', () => {
     it('should handle error without message property', async () => {
       mockCallTool.mockRejectedValue('Plain error string');
 
-      await runCommand('resolve-library-id', null, null);
+      await runCommand('get_current_page', null, null);
 
       expect(consoleErrorSpy).toHaveBeenCalledWith('Error running command:', 'Plain error string');
       expect(processExitSpy).toHaveBeenCalledWith(1);
     });
 
     it('should handle flag parameter gracefully', async () => {
-      await runCommand('resolve-library-id', '{"libraryName": "react"}', '--some-flag');
+      await runCommand('navigate_page', '{"pageId": "123:456"}', '--some-flag');
 
-      expect(consoleLogSpy).toHaveBeenCalledWith('resolve-library-id {"libraryName": "react"} --some-flag');
+      expect(consoleLogSpy).toHaveBeenCalledWith('navigate_page {"pageId": "123:456"} --some-flag');
       expect(mockCallTool).toHaveBeenCalledWith(
         {
-          name: 'resolve-library-id',
-          arguments: { libraryName: 'react' },
+          name: 'navigate_page',
+          arguments: { pageId: '123:456' },
         },
         {}
       );
@@ -245,7 +240,7 @@ describe('commands/runner', () => {
         return { result: 'success' };
       });
 
-      await runCommand('resolve-library-id', null, null);
+      await runCommand('get_current_page', null, null);
 
       expect(callOrder).toEqual(['connect', 'callTool']);
     });
@@ -262,7 +257,7 @@ describe('commands/runner', () => {
         callOrder.push('close');
       });
 
-      await runCommand('resolve-library-id', null, null);
+      await runCommand('get_current_page', null, null);
 
       expect(callOrder).toEqual(['callTool', 'close']);
     });

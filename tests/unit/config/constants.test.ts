@@ -4,16 +4,16 @@ import { COMMANDS, COMMANDS_DETAIL, COMMANDS_INFO, DEFAULT_MCP_SERVER } from '..
 
 describe('config/constants', () => {
   describe('DEFAULT_MCP_SERVER', () => {
-    it('should have correct command', () => {
-      expect(DEFAULT_MCP_SERVER.command).toBe('npx');
+    it('should have correct URL', () => {
+      expect(DEFAULT_MCP_SERVER.url).toBe('http://127.0.0.1:3845/mcp');
     });
 
-    it('should have correct args array', () => {
-      expect(DEFAULT_MCP_SERVER.args).toEqual(['-y', '@upstash/context7-mcp']);
+    it('should have url as a string', () => {
+      expect(typeof DEFAULT_MCP_SERVER.url).toBe('string');
     });
 
-    it('should have args as an array', () => {
-      expect(Array.isArray(DEFAULT_MCP_SERVER.args)).toBe(true);
+    it('should have valid HTTP URL', () => {
+      expect(DEFAULT_MCP_SERVER.url).toMatch(/^https?:\/\//);
     });
   });
 
@@ -22,32 +22,26 @@ describe('config/constants', () => {
       expect(Array.isArray(COMMANDS)).toBe(true);
     });
 
-    it('should contain 2 commands', () => {
-      expect(COMMANDS).toHaveLength(2);
+    it('should start empty (populated dynamically)', () => {
+      expect(COMMANDS).toHaveLength(0);
     });
 
-    it('should include resolve-library-id command', () => {
-      expect(COMMANDS).toContain('resolve-library-id');
+    it('should be mutable (can be populated)', () => {
+      // Test that we can push to it (it's not frozen)
+      const originalLength = COMMANDS.length;
+      COMMANDS.push('test-command');
+      expect(COMMANDS).toHaveLength(originalLength + 1);
+      COMMANDS.pop(); // Clean up
     });
 
-    it('should include get-library-docs command', () => {
-      expect(COMMANDS).toContain('get-library-docs');
-    });
-
-    it('should include all expected commands', () => {
-      const expectedCommands = ['resolve-library-id', 'get-library-docs'];
-
-      expect(COMMANDS).toEqual(expectedCommands);
-    });
-
-    it('should have no duplicate commands', () => {
+    it('should have no duplicate commands when populated', () => {
       const uniqueCommands = [...new Set(COMMANDS)];
       expect(uniqueCommands).toHaveLength(COMMANDS.length);
     });
 
-    it('should have all lowercase kebab-case commands', () => {
+    it('should have all lowercase kebab-case or snake_case commands when populated', () => {
       COMMANDS.forEach(cmd => {
-        expect(cmd).toMatch(/^[a-z-]+$/);
+        expect(cmd).toMatch(/^[a-z_-]+$/);
       });
     });
   });
@@ -61,25 +55,15 @@ describe('config/constants', () => {
       expect(COMMANDS_INFO).toHaveLength(COMMANDS.length);
     });
 
-    it('should have 2 descriptions', () => {
-      expect(COMMANDS_INFO).toHaveLength(2);
+    it('should start empty (populated dynamically)', () => {
+      expect(COMMANDS_INFO).toHaveLength(0);
     });
 
-    it('should have non-empty strings for all descriptions', () => {
+    it('should have non-empty strings for all descriptions when populated', () => {
       COMMANDS_INFO.forEach(info => {
         expect(typeof info).toBe('string');
         expect(info.length).toBeGreaterThan(0);
       });
-    });
-
-    it('should have description for resolve-library-id at correct index', () => {
-      const resolveIndex = COMMANDS.indexOf('resolve-library-id');
-      expect(COMMANDS_INFO[resolveIndex]).toContain('Resolves');
-    });
-
-    it('should have description for get-library-docs at correct index', () => {
-      const docsIndex = COMMANDS.indexOf('get-library-docs');
-      expect(COMMANDS_INFO[docsIndex]).toContain('Fetches');
     });
   });
 
@@ -92,33 +76,14 @@ describe('config/constants', () => {
       expect(COMMANDS_DETAIL).toHaveLength(COMMANDS.length);
     });
 
-    it('should have 2 detail entries', () => {
-      expect(COMMANDS_DETAIL).toHaveLength(2);
+    it('should start empty (populated dynamically)', () => {
+      expect(COMMANDS_DETAIL).toHaveLength(0);
     });
 
-    it('should have strings for all details', () => {
+    it('should have strings for all details when populated', () => {
       COMMANDS_DETAIL.forEach(detail => {
         expect(typeof detail).toBe('string');
       });
-    });
-
-    it('should have detail for resolve-library-id containing parameters', () => {
-      const resolveIndex = COMMANDS.indexOf('resolve-library-id');
-      const detail = COMMANDS_DETAIL[resolveIndex];
-      expect(detail).toContain('libraryName');
-    });
-
-    it('should have detail for get-library-docs containing parameters', () => {
-      const docsIndex = COMMANDS.indexOf('get-library-docs');
-      const detail = COMMANDS_DETAIL[docsIndex];
-      expect(detail).toContain('context7CompatibleLibraryID');
-    });
-
-    it('should have detail for get-library-docs mentioning optional parameters', () => {
-      const docsIndex = COMMANDS.indexOf('get-library-docs');
-      const detail = COMMANDS_DETAIL[docsIndex];
-      expect(detail).toContain('topic');
-      expect(detail).toContain('page');
     });
   });
 

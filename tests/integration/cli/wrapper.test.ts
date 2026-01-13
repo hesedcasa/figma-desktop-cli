@@ -21,6 +21,7 @@ vi.mock('readline', () => ({
 const mockConnect = vi.fn();
 const mockCallTool = vi.fn();
 const mockClientClose = vi.fn();
+const mockListTools = vi.fn();
 
 vi.mock('@modelcontextprotocol/sdk/client/index.js', () => ({
   Client: vi.fn(function () {
@@ -28,12 +29,13 @@ vi.mock('@modelcontextprotocol/sdk/client/index.js', () => ({
       connect: mockConnect,
       callTool: mockCallTool,
       close: mockClientClose,
+      listTools: mockListTools,
     };
   }),
 }));
 
-vi.mock('@modelcontextprotocol/sdk/client/stdio.js', () => ({
-  StdioClientTransport: vi.fn(),
+vi.mock('@modelcontextprotocol/sdk/client/sse.js', () => ({
+  SSEClientTransport: vi.fn(),
 }));
 
 vi.mock('@modelcontextprotocol/sdk/types.js', () => ({
@@ -67,6 +69,24 @@ describe('cli/wrapper (Integration)', () => {
     mockConnect.mockResolvedValue(undefined);
     mockCallTool.mockResolvedValue({ result: 'success' });
     mockClientClose.mockResolvedValue(undefined);
+    mockListTools.mockResolvedValue({
+      tools: [
+        {
+          name: 'get_current_page',
+          description: 'Gets information about the current page',
+          inputSchema: { type: 'object', properties: {} },
+        },
+        {
+          name: 'navigate_page',
+          description: 'Navigates to a specific page',
+          inputSchema: {
+            type: 'object',
+            properties: { pageId: { type: 'string', description: 'The ID of the page' } },
+            required: ['pageId'],
+          },
+        },
+      ],
+    });
     mockOn.mockImplementation(() => {});
   });
 
@@ -83,7 +103,7 @@ describe('cli/wrapper (Integration)', () => {
       expect(readline.default.createInterface).toHaveBeenCalledWith({
         input: process.stdin,
         output: process.stdout,
-        prompt: 'context7> ',
+        prompt: 'figma> ',
       });
     });
   });
@@ -102,7 +122,7 @@ describe('cli/wrapper (Integration)', () => {
       await cli.connect();
 
       const allCalls = consoleLogSpy.mock.calls.map(call => call[0]).join(' ');
-      expect(allCalls).toContain('Context7 CLI');
+      expect(allCalls).toContain('Figma Desktop MCP CLI');
     });
 
     it('should handle connection errors and exit', async () => {
@@ -114,7 +134,7 @@ describe('cli/wrapper (Integration)', () => {
       // So we don't expect it to throw, but to handle the error gracefully
       await cli.connect();
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to connect to MCP server:', expect.any(Error));
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to connect to Figma Desktop MCP server:', expect.any(Error));
       expect(processExitSpy).toHaveBeenCalledWith(1);
     });
   });
@@ -162,7 +182,7 @@ describe('cli/wrapper (Integration)', () => {
       await lineHandler('help');
 
       const allCalls = consoleLogSpy.mock.calls.map(call => call[0]).join(' ');
-      expect(allCalls).toContain('Context7 CLI');
+      expect(allCalls).toContain('Figma Desktop MCP CLI');
       expect(mockPrompt).toHaveBeenCalled();
     });
 
